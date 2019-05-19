@@ -9,3 +9,8 @@
 - Nodejs crypto documentation https://nodejs.org/api/crypto.html to hashed passwords
 - Virtual fields
 - Completed API development for Authentication(user signup and signin)
+
+3rd commit:
+- Protecting routes (authorization) using express-jwt
+- Users must be signin to make a Post
+- Completed API development for Authorization
