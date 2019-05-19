@@ -14,3 +14,7 @@
 - Protecting routes (authorization) using express-jwt
 - Users must be signin to make a Post
 - Completed API development for Authorization
+
+4th commit:
+- User create, update and delete functionality 
+- Completed API development for Users
