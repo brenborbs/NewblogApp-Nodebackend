@@ -18,3 +18,7 @@
 4th commit:
 - User create, update and delete functionality 
 - Completed API development for Users
+
+5th commit:
+- Handle post file uploads using formidable
+- Completed API Users and Posts CRUD relationship schema
