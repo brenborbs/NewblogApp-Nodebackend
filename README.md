@@ -22,3 +22,7 @@
 5th commit:
 - Handle post file uploads using formidable
 - Completed API Users and Posts CRUD relationship schema
+
+6th commit:
+- Added API Update profile with image
+- Added API GET User Photo with route
