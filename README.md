@@ -26,3 +26,7 @@
 6th commit:
 - Added API Update profile with image
 - Added API GET User Photo with route
+
+7th commit:
+- Added API USER follow and unfollow
+- ADDEd API User remove follow and following
