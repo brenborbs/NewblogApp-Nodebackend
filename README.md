@@ -30,3 +30,8 @@
 7th commit:
 - Added API USER follow and unfollow
 - ADDEd API User remove follow and following
+
+8th commit:
+- Added API like/unlike functionality on Users
+- Added Super Admin features
+- Added Social register and signin/signout google

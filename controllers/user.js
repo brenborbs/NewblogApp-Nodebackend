@@ -20,7 +20,14 @@ exports.userById = (req, res, next, id) => {
 };
 
 exports.hasAuthorization = (req, res, next) => {
-  const authorized = req.profile && req.auth && req.profile._id === req.auth._id;
+    let sameUser = req.profile && req.auth && req.profile._id == req.auth._id;
+    let adminUser = req.profile && req.auth && req.auth.role === "admin";
+
+    const authorized = sameUser || adminUser;
+
+    // console.log("req.profile ", req.profile, " req.auth ", req.auth);
+    console.log("SAMEUSER", sameUser, "ADMINUSER", adminUser);
+  
   if (!authorized) {
       return res.status(403).json({
           error: "User is not authorized to perform this action"
@@ -185,4 +192,17 @@ exports.removeFollower = (req, res) => {
             result.salt = undefined;
             res.json(result);
         });
+};
+
+exports.findPeople = (req, res) => {
+    let following = req.profile.following;
+    following.push(req.profile._id);
+    User.find({ _id: { $nin: following } }, (err, users) => {
+        if (err) {
+            return res.status(400).json({
+                error: err
+            });
+        }
+        res.json(users);
+    }).select("name");
 };
