@@ -14,6 +14,12 @@ To run go to nodeapi folder:
 npm run dev
 ```
 
+## App Screenshots
+
+<img src="app3.png" alt="BlogNode">
+<img src="app4.png" alt="BlogNode">
+<img src="app6.png" alt="BlogNode">
+
 1st commit:
 
 - DB using MongoDB Atlas

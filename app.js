@@ -1,43 +1,45 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const morgan = require('morgan');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
-const expressValidator = require('express-validator');
-const fs = require('fs');
-const cors = require('cors');
+const morgan = require("morgan");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+var cookieParser = require("cookie-parser");
+const expressValidator = require("express-validator");
+const fs = require("fs");
+const cors = require("cors");
 
 // load env variables
-const dotenv = require('dotenv');
+const dotenv = require("dotenv");
 dotenv.config();
 
 //db connection
-mongoose.connect(
-  process.env.MONGO_URI,
-  {useNewUrlParser: true}
-)
-.then(() => console.log('DB Connected'))
- 
-mongoose.connection.on('error', err => {
-  console.log(`DB connection error: ${err.message}`)
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useCreateIndex: true
+  })
+  .then(() => console.log("DB Connected"));
+
+mongoose.connection.on("error", err => {
+  console.log(`DB connection error: ${err.message}`);
 });
 
 // routes
-const postRoutes = require('./routes/post');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
+const postRoutes = require("./routes/post");
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
+const categoryRoutes = require("./routes/category");
 // apiDocs
-app.get('/', (req, res) => {
-  fs.readFile('docs/apiDocs.json', (err, data) => {
+app.get("/", (req, res) => {
+  fs.readFile("docs/apiDocs.json", (err, data) => {
     if (err) {
       res.status(400).json({
         error: err
-      })
+      });
     }
-    const docs = JSON.parse(data)
-    res.json(docs)
-  })
+    const docs = JSON.parse(data);
+    res.json(docs);
+  });
 });
 
 // middleware
@@ -49,13 +51,14 @@ app.use(cors());
 app.use("/", postRoutes);
 app.use("/", authRoutes);
 app.use("/", userRoutes);
+app.use("/", categoryRoutes);
 app.use(function(err, req, res, next) {
   if (err.name === "UnauthorizedError") {
-      res.status(401).json({ error: "Unauthorized!" });
+    res.status(401).json({ error: "Unauthorized!" });
   }
 });
 
 const port = 8080;
 app.listen(port, () => {
-  console.log(`The Node JS API is running on port: ${port}`)
+  console.log(`The Node JS API is running on port: ${port}`);
 });
