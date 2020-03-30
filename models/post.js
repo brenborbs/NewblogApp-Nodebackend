@@ -17,7 +17,7 @@ const postSchema = new mongoose.Schema({
   category: {
     type: ObjectId,
     ref: "Category",
-    required: false
+    required: true
   },
   postedBy: {
     type: ObjectId,

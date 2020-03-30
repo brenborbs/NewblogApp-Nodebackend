@@ -1,50 +1,50 @@
-const _ = require('lodash');
-const User = require('../models/user');
-const formidable = require('formidable');
-const fs = require('fs');
+const _ = require("lodash");
+const User = require("../models/user");
+const formidable = require("formidable");
+const fs = require("fs");
 
 exports.userById = (req, res, next, id) => {
   User.findById(id)
-  // populate followers and following users array
-  .populate('following', '_id name')
-  .populate('followers', '_id name')
-  .exec((err, user) => {
-    if(err || !user) {
-      return res.status(400).json({
-        error: "User not found!"
-      })
-    }
-    req.profile = user // adds profile object in req with user info
-    next();
-  });
+    // populate followers and following users array
+    .populate("following", "_id name")
+    .populate("followers", "_id name")
+    .exec((err, user) => {
+      if (err || !user) {
+        return res.status(400).json({
+          error: "User not found!"
+        });
+      }
+      req.profile = user; // adds profile object in req with user info
+      next();
+    });
 };
 
 exports.hasAuthorization = (req, res, next) => {
-    let sameUser = req.profile && req.auth && req.profile._id == req.auth._id;
-    let adminUser = req.profile && req.auth && req.auth.role === "admin";
+  let sameUser = req.profile && req.auth && req.profile._id == req.auth._id;
+  let adminUser = req.profile && req.auth && req.auth.role === "admin";
 
-    const authorized = sameUser || adminUser;
+  const authorized = sameUser || adminUser;
 
-    // console.log("req.profile ", req.profile, " req.auth ", req.auth);
-    console.log("SAMEUSER", sameUser, "ADMINUSER", adminUser);
-  
+  // console.log("req.profile ", req.profile, " req.auth ", req.auth);
+  console.log("SAMEUSER", sameUser, "ADMINUSER", adminUser);
+
   if (!authorized) {
-      return res.status(403).json({
-          error: "User is not authorized to perform this action"
-      });
+    return res.status(403).json({
+      error: "User is not authorized to perform this action"
+    });
   }
   next();
 };
 
 exports.allUsers = (req, res) => {
   User.find((err, users) => {
-      if (err) {
-          return res.status(400).json({
-              error: err
-          });
-      }
-      res.json(users);
-  }).select("name email updated created"); // select method
+    if (err) {
+      return res.status(400).json({
+        error: err
+      });
+    }
+    res.json(users);
+  }).select("name email updated about created"); // select method
 };
 
 exports.getUser = (req, res) => {
@@ -70,139 +70,168 @@ exports.getUser = (req, res) => {
 // };
 
 exports.updateUser = (req, res, next) => {
-    let form = new formidable.IncomingForm();
-    // console.log("incoming form data: ", form);
-    form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Photo could not be uploaded"
-            });
-        }
-        // save user
-        let user = req.profile;
-        // console.log("user in update: ", user);
-        user = _.extend(user, fields);
+  let form = new formidable.IncomingForm();
+  // console.log("incoming form data: ", form);
+  form.keepExtensions = true;
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Photo could not be uploaded"
+      });
+    }
+    // save user
+    let user = req.profile;
+    // console.log("user in update: ", user);
+    user = _.extend(user, fields);
 
-        user.updated = Date.now();
-        // console.log("USER FORM DATA UPDATE: ", user);
+    user.updated = Date.now();
+    // console.log("USER FORM DATA UPDATE: ", user);
 
-        if (files.photo) {
-            user.photo.data = fs.readFileSync(files.photo.path);
-            user.photo.contentType = files.photo.type;
-        }
+    if (files.photo) {
+      user.photo.data = fs.readFileSync(files.photo.path);
+      user.photo.contentType = files.photo.type;
+    }
 
-        user.save((err, result) => {
-            if (err) {
-                return res.status(400).json({
-                    error: err
-                });
-            }
-            user.hashed_password = undefined;
-            user.salt = undefined;
-            // console.log("user after update with formdata: ", user);
-            res.json(user);
+    user.save((err, result) => {
+      if (err) {
+        return res.status(400).json({
+          error: err
         });
+      }
+      user.hashed_password = undefined;
+      user.salt = undefined;
+      // console.log("user after update with formdata: ", user);
+      res.json(user);
     });
+  });
 };
 
 exports.userPhoto = (req, res, next) => {
-    if (req.profile.photo.data) {
-        res.set(("Content-Type", req.profile.photo.contentType));
-        return res.send(req.profile.photo.data);
-    }
-    next();
+  if (req.profile.photo.data) {
+    res.set(("Content-Type", req.profile.photo.contentType));
+    return res.send(req.profile.photo.data);
+  }
+  next();
 };
 
 exports.deleteUser = (req, res, next) => {
   let user = req.profile;
   user.remove((err, user) => {
-      if (err) {
-          return res.status(400).json({
-              error: err
-          });
-      }
-      res.json({ message: "User deleted successfully!" });
+    if (err) {
+      return res.status(400).json({
+        error: err
+      });
+    }
+    res.json({ message: "User deleted successfully!" });
   });
 };
 
 // follow unfollow
 exports.addFollowing = (req, res, next) => {
-    User.findByIdAndUpdate(
-        req.body.userId,
-        { $push: { following: req.body.followId } },
-        (err, result) => {
-            if (err) {
-                return res.status(400).json({ error: err });
-            }
-            next();
-        }
-    );
+  User.findByIdAndUpdate(
+    req.body.userId,
+    { $push: { following: req.body.followId } },
+    (err, result) => {
+      if (err) {
+        return res.status(400).json({ error: err });
+      }
+      next();
+    }
+  );
 };
 
 exports.addFollower = (req, res) => {
-    User.findByIdAndUpdate(
-        req.body.followId, // 1st arg
-        { $push: { followers: req.body.userId } }, // 2nd arg
-        { new: true }
-    )
-        .populate("following", "_id name")
-        .populate("followers", "_id name")
-        .exec((err, result) => { // 3rd arg callback!
-            if (err) {
-                return res.status(400).json({
-                    error: err
-                });
-            }
-            result.hashed_password = undefined;
-            result.salt = undefined;
-            res.json(result);
+  User.findByIdAndUpdate(
+    req.body.followId, // 1st arg
+    { $push: { followers: req.body.userId } }, // 2nd arg
+    { new: true }
+  )
+    .populate("following", "_id name")
+    .populate("followers", "_id name")
+    .exec((err, result) => {
+      // 3rd arg callback!
+      if (err) {
+        return res.status(400).json({
+          error: err
         });
+      }
+      result.hashed_password = undefined;
+      result.salt = undefined;
+      res.json(result);
+    });
 };
 
 // remove follow unfollow
 exports.removeFollowing = (req, res, next) => {
-    User.findByIdAndUpdate(
-        req.body.userId,
-        { $pull: { following: req.body.unfollowId } },
-        (err, result) => {
-            if (err) {
-                return res.status(400).json({ error: err });
-            }
-            next();
-        }
-    );
+  User.findByIdAndUpdate(
+    req.body.userId,
+    { $pull: { following: req.body.unfollowId } },
+    (err, result) => {
+      if (err) {
+        return res.status(400).json({ error: err });
+      }
+      next();
+    }
+  );
 };
 
 exports.removeFollower = (req, res) => {
-    User.findByIdAndUpdate(
-        req.body.unfollowId,
-        { $pull: { followers: req.body.userId } },
-        { new: true }
-    )
-        .populate("following", "_id name")
-        .populate("followers", "_id name")
-        .exec((err, result) => {
-            if (err) {
-                return res.status(400).json({
-                    error: err
-                });
-            }
-            result.hashed_password = undefined;
-            result.salt = undefined;
-            res.json(result);
+  User.findByIdAndUpdate(
+    req.body.unfollowId,
+    { $pull: { followers: req.body.userId } },
+    { new: true }
+  )
+    .populate("following", "_id name")
+    .populate("followers", "_id name")
+    .exec((err, result) => {
+      if (err) {
+        return res.status(400).json({
+          error: err
         });
+      }
+      result.hashed_password = undefined;
+      result.salt = undefined;
+      res.json(result);
+    });
 };
 
-exports.findPeople = (req, res) => {
-    let following = req.profile.following;
-    following.push(req.profile._id);
-    User.find({ _id: { $nin: following } }, (err, users) => {
-        if (err) {
-            return res.status(400).json({
-                error: err
-            });
-        }
-        res.json(users);
-    }).select("name");
+// exports.findPeople = (req, res) => {
+//   let following = req.profile.following;
+//   following.push(req.profile._id);
+//   User.find({ _id: { $nin: following } }, (err, users) => {
+//     if (err) {
+//       return res.status(400).json({
+//         error: err
+//       });
+//     }
+//     res.json(users);
+//   }).select("name about email created");
+// };
+
+// with pagination
+exports.findPeople = async (req, res) => {
+  // get current page from req.query or use default value of 1
+  const currentPage = req.query.page || 1;
+  // return 3 posts per page
+  const perPage = 3;
+  let totalItems;
+
+  let following = req.profile.following;
+  following.push(req.profile._id);
+
+  const users = await User.find()
+    // countDocuments() gives you total count of posts
+    .countDocuments()
+    .then(count => {
+      totalItems = count;
+      return User.find({ _id: { $nin: following } })
+        .skip((currentPage - 1) * perPage)
+        .select("name email updated about created")
+        .limit(perPage)
+        .sort({ created: -1 });
+    })
+    .then(users => {
+      res.status(200).json(users);
+    })
+    .catch(err => console.log(err));
 };
