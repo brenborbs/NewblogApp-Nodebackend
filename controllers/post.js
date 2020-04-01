@@ -2,6 +2,7 @@ const Post = require("../models/post");
 const formidable = require("formidable");
 const fs = require("fs");
 const _ = require("lodash");
+const { errorHandler } = require("../helpers/dbErrorHandler");
 
 exports.postById = (req, res, next, id) => {
   Post.findById(id)
@@ -272,7 +273,7 @@ exports.uncomment = (req, res) => {
  * sell / arrival
  * by sell = /reports?sortBy=sold&order=desc&limit=4
  * by arrival = /reports?sortBy=createdAt&order=desc&limit=4
- * if no params are sent, then all reports are returned
+ * if no params are sent, then all posts are returned
  */
 
 exports.list = (req, res) => {
@@ -297,8 +298,8 @@ exports.list = (req, res) => {
 };
 
 /**
- * it will find the reports based on the req report category
- * other reports that has the same category, will be returned
+ * it will find the posts based on the req post category
+ * other posts that has the same category, will be returned
  */
 
 exports.listRelated = (req, res) => {
@@ -306,7 +307,7 @@ exports.listRelated = (req, res) => {
 
   Post.find({ _id: { $ne: req.post }, category: req.post.category })
     .limit(limit)
-    .populate("category", "_id item")
+    .populate("category", "_id name")
     .exec((err, posts) => {
       if (err) {
         return res.status(400).json({
@@ -329,11 +330,11 @@ exports.listCategories = (req, res) => {
 };
 
 /**
- * list reports by search
+ * list posts by search
  * we will implement report search in react frontend
  * we will show categories in checkbox
  * as the user clicks on those checkbox
- * we will make api request and show the reports to users based on what he wants
+ * we will make api request and show the posts to users based on what he wants
  */
 
 exports.listBySearch = (req, res) => {
@@ -349,16 +350,6 @@ exports.listBySearch = (req, res) => {
   for (let key in req.body.filters) {
     if (req.body.filters[key].length > 0) {
       findArgs[key] = req.body.filters[key];
-      // if (key === "price") {
-      //   // gte -  greater than price [0-10]
-      //   // lte - less than
-      //   findArgs[key] = {
-      //     $gte: req.body.filters[key][0],
-      //     $lte: req.body.filters[key][1]
-      //   };
-      // } else {
-      //   findArgs[key] = req.body.filters[key];
-      // }
     }
   }
 
@@ -381,25 +372,47 @@ exports.listBySearch = (req, res) => {
     });
 };
 
+// exports.listSearch = (req, res) => {
+//   // create query object to hold search value and category value
+//   const query = {};
+//   // assign search value to query.item
+//   if (req.query.search) {
+//     query.item = { $regex: req.query.search, $options: "i" };
+//     // assigne category value to query.category
+//     if (req.query.category && req.query.category != "All") {
+//       query.category = req.query.category;
+//     }
+//     // find the report based on query object with 2 properties
+//     // search and category
+//     Post.find(query, (err, posts) => {
+//       if (err) {
+//         return res.status(400).json({
+//           error: errorHandler(err)
+//         });
+//       }
+//       res.json(posts);
+//     }).select("-photo -body");
+//   }
+// };
+
 exports.listSearch = (req, res) => {
-  // create query object to hold search value and category value
-  const query = {};
-  // assign search value to query.item
-  if (req.query.search) {
-    query.item = { $regex: req.query.search, $options: "i" };
-    // assigne category value to query.category
-    if (req.query.category && req.query.category != "All") {
-      query.category = req.query.category;
-    }
-    // find the report based on query object with 2 properties
-    // search and category
-    Post.find(query, (err, reports) => {
-      if (err) {
-        return res.status(400).json({
-          error: errorHandler(err)
-        });
+  const { search } = req.query; // input value at front-end
+  if (search) {
+    Post.find(
+      {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { body: { $regex: search, $options: "i" } }
+        ]
+      },
+      (err, posts) => {
+        if (err) {
+          return res.status(400).json({
+            error: errorHandler(err)
+          });
+        }
+        res.json(posts);
       }
-      res.json(posts);
-    }).select("-photo");
+    ).select("-photo -body");
   }
 };
